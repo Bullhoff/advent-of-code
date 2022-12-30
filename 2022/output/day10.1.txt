@@ -1,0 +1,35 @@
+{
+  "col": [
+    {
+      "cycle": 20,
+      "signal": 17,
+      "res": 340
+    },
+    {
+      "cycle": 60,
+      "signal": 21,
+      "res": 1260
+    },
+    {
+      "cycle": 100,
+      "signal": 17,
+      "res": 1700
+    },
+    {
+      "cycle": 140,
+      "signal": 21,
+      "res": 2940
+    },
+    {
+      "cycle": 180,
+      "signal": 17,
+      "res": 3060
+    },
+    {
+      "cycle": 220,
+      "signal": 21,
+      "res": 4620
+    }
+  ],
+  "signalSum": 13920
+}
