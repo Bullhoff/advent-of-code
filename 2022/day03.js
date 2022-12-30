@@ -6,7 +6,7 @@ function readFileToArray(filename) {
 	return arr;
 }
 
-let input_data = readFileToArray('./data/day3.txt');
+let input_data = readFileToArray('./data/day03.txt');
 console.log(input_data)
 
 function getPriority(item) {

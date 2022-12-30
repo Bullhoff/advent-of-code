@@ -6,7 +6,7 @@ function readFileToArray(filename) {
 	return arr;
 }
 
-let input_data = readFileToArray('./data/day2.txt');
+let input_data = readFileToArray('./data/day02.txt');
 console.log(input_data);
 
 

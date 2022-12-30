@@ -6,7 +6,7 @@ function readFileToArray(filename) {
 	return arr;
 }
 
-let input_data = readFileToArray('./data/day7.txt');
+let input_data = readFileToArray('./data/day07.txt');
 
 
 function inputHandler(rowInput, currentDir, dir){

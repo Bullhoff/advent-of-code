@@ -6,7 +6,7 @@ function readFileToArray(filename) {
 	return arr;
 }
 
-let input_data = readFileToArray('./data/day5.txt');
+let input_data = readFileToArray('./data/day05.txt');
 //console.log(input_data)
 
 function fixStacksArray(input_data){

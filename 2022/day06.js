@@ -6,7 +6,7 @@ function readFileToArray(filename) {
 	return arr;
 }
 
-let input_data = readFileToArray('./data/day6.txt')[0];
+let input_data = readFileToArray('./data/day06.txt')[0];
 
 const hasDuplicates = (arr) => arr.length !== new Set(arr).size;
 

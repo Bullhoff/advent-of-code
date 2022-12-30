@@ -1,7 +1,7 @@
 const fs = require('fs');
 let utils = require('./utils.js');
 
-let input_data = utils.readFileToArray('./data/day8.txt');
+let input_data = utils.readFileToArray('./data/day08.txt');
 //console.log(input_data)
 
 

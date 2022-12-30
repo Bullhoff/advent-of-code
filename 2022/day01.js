@@ -7,7 +7,7 @@ function readFileToArray(filename) {
     return arr;
 }
 
-let input_data = readFileToArray('./data/day1.txt');
+let input_data = readFileToArray('./data/day01.txt');
 console.log(input_data);
 
 let sums = [0]
