@@ -7,17 +7,12 @@ function readFileToArray(filename) {
 }
 
 let input_data = readFileToArray('./data/day03.txt');
-console.log(input_data)
+console.log(input_data);
 
 function getPriority(item) {
-	if (item == item.toUpperCase()) 
-        return item.charCodeAt(0) - 38; 
-	else 
-        return priority = item.charCodeAt(0) - 96;
+	if (item == item.toUpperCase()) return item.charCodeAt(0) - 38;
+	else return (priority = item.charCodeAt(0) - 96);
 }
-
-
-
 
 class Part1 {
 	constructor() {
@@ -32,7 +27,7 @@ class Part1 {
 
 			for (let y = 0; y < compartmentItems[0].length; y++) {
 				if (compartmentItems[1].includes(compartmentItems[0][y])) {
-                    priority = getPriority(compartmentItems[0][y])
+					priority = getPriority(compartmentItems[0][y]);
 				}
 			}
 
@@ -49,16 +44,18 @@ class Part2 {
 	iterate() {
 		for (let i = 0; i < input_data.length; i += 3) {
 			let groupsRucksacks = input_data.slice(i, i + 3);
-			groupsRucksacks = groupsRucksacks.sort(function (a, b) {return b.length - a.length;});
-            let priority = 0
+			groupsRucksacks = groupsRucksacks.sort(function (a, b) {
+				return b.length - a.length;
+			});
+			let priority = 0;
 
 			for (let i = 0; i < groupsRucksacks[0].length; i++) {
 				if (groupsRucksacks[1].includes(groupsRucksacks[0][i]) && groupsRucksacks[2].includes(groupsRucksacks[0][i])) {
-                    priority = getPriority(groupsRucksacks[0][i])
+					priority = getPriority(groupsRucksacks[0][i]);
 				}
 			}
 
-            this.prioritySum += priority
+			this.prioritySum += priority;
 		}
 	}
 }
