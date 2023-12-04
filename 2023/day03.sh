@@ -54,7 +54,7 @@ function main {
 }
 
 function check-if-valid {
-	[ "$current_number" ] && [ ! -v "${added_numbers[$rownr $x]}" ] && {
+	[ "$current_number" ] && [ ! -v "${added_numbers["$rownr $x"]}" ] && {
 		$next_to_symbol && added_numbers["$rownr $x"]="$current_number"
 		[ "$this_number_is_next_to_asterix_at_cord" != "" ] && {
 			asterisks_count[$this_number_is_next_to_asterix_at_cord]=$((asterisks_count[$this_number_is_next_to_asterix_at_cord] + 1))
