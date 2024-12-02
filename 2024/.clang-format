@@ -1,0 +1,23 @@
+UseTab: Always
+IndentWidth: 8
+TabWidth: 8
+AlignTrailingComments: false
+AccessModifierOffset: -8
+IndentAccessModifiers: false
+BreakBeforeBraces: Attach
+AllowShortBlocksOnASingleLine: Always
+AllowShortIfStatementsOnASingleLine: AllIfsAndElse
+AllowShortFunctionsOnASingleLine: InlineOnly
+PenaltyBreakBeforeFirstCallParameter: 1000
+AllowShortLoopsOnASingleLine: true
+ColumnLimit: 10000000
+BinPackArguments: false
+AlignOperands: false
+BreakBeforeBinaryOperators: None
+AllowAllArgumentsOnNextLine: false
+AllowAllParametersOfDeclarationOnNextLine: false
+InsertTrailingCommas: None
+AlignAfterOpenBracket: DontAlign
+ContinuationIndentWidth: 0
+SortIncludes: false
+
