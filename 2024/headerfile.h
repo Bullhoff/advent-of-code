@@ -30,8 +30,9 @@
 #define COLORFUNC BLUE
 #define DEBUG_INFO_S COLORFILE << __FILENAME__ << "\x1b[0m:" << COLORLINE << __LINE__ << "\x1b[0m:" << COLORFUNC << __func__ << "\x1b[0m  "
 
+#define colorbool(b) ((b) == 0 || (b) == false ? "\x1b[31m" : "\x1b[32m") << (b) << "\x1b[0m"
+
 #include <algorithm>
-//#include <cctype>
 #include <locale>
 
 inline void ltrim(std::string &s) {
@@ -41,7 +42,14 @@ inline void ltrim(std::string &s) {
 inline void rtrim(std::string &s) {
 	s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), s.end());
 }
+
 inline void trim(std::string &s) {
 	rtrim(s);
 	ltrim(s);
+}
+
+inline bool is_number(const std::string &s) {
+	std::string::const_iterator it = s.begin();
+	while (it != s.end() && std::isdigit(*it)) ++it;
+	return !s.empty() && it == s.end();
 }
