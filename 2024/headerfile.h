@@ -53,3 +53,25 @@ inline bool is_number(const std::string &s) {
 	while (it != s.end() && std::isdigit(*it)) ++it;
 	return !s.empty() && it == s.end();
 }
+
+#include <string>
+#include <chrono>
+#include <sstream>
+inline std::string duration_str(std::chrono::system_clock::time_point t0) {
+	auto t1 = std::chrono::high_resolution_clock::now();
+	std::ostringstream oss;
+	oss << "Duration=\x1b[1m\x1b[38;2;155;255;15m";
+	auto diff = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0);
+	if (diff < std::chrono::microseconds(5000)) {
+		/// Less than 5000µs
+		oss << diff.count() << "\x1b[0mµs";
+	} else if (diff < std::chrono::milliseconds(5000)) {
+		/// Less than 5000ms
+		auto ms_diff = std::chrono::duration_cast<std::chrono::milliseconds>(diff);
+		oss << ms_diff.count() << "\x1b[0mms";
+	} else {
+		auto s_diff = std::chrono::duration_cast<std::chrono::duration<float>>(diff);
+		oss << s_diff.count() << "\x1b[0ms";
+	}
+	return oss.str();
+}
