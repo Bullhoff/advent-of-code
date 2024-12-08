@@ -13,12 +13,9 @@
 
 struct sCoord {
 	int x, y;
-	sCoord(int x, int y) : x(x), y(y) {}
-	bool operator<(const sCoord &other) const {
-		if (x == other.x) { return y < other.y; }
-		return x < other.x;
-	}
-	bool operator==(const sCoord &other) const { return x == other.x && y == other.y; }
+	uint64_t value;
+	sCoord(int x, int y) : x(x), y(y) { value = (static_cast<uint64_t>(x) << 32) | static_cast<uint32_t>(y); }
+	bool operator==(const sCoord &other) const { return value == other.value; }
 };
 inline sCoord operator+(const sCoord &a, const sCoord &b) {
 	return sCoord{a.x + b.x, a.y + b.y};
@@ -28,7 +25,7 @@ inline sCoord operator*(const sCoord &a, int d) {
 }
 namespace std {
 template <> struct hash<sCoord> {
-	size_t operator()(const sCoord &coord) const { return hash<int>()(coord.x) ^ (hash<int>()(coord.y) << 1); }
+	size_t operator()(const sCoord &coord) const { return coord.value; }
 };
 } // namespace std
 
