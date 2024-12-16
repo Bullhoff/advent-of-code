@@ -75,3 +75,13 @@ inline std::string duration_str(std::chrono::system_clock::time_point t0) {
 	}
 	return oss.str();
 }
+
+#include <random>
+std::string generateRandomColor(bool bg = false) {
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<> dis(0, 255);
+	std::ostringstream oss;
+	oss << ((bg) ? "\x1b[48;2;" : "\x1b[38;2;") << dis(gen) << ";" << dis(gen) << ";" << dis(gen) << "m";
+	return oss.str();
+}
