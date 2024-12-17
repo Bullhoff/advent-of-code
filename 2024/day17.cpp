@@ -20,7 +20,7 @@ void split(std::vector<int> &arr, std::string str, const std::string &delimiter)
 	arr.emplace_back(std::stoi(str));
 }
 
-std::string join(std::vector<int> arr, std::string sep = ",") {
+std::string join(const std::vector<int> &arr, const std::string &sep = ",") {
 	std::stringstream ss;
 	for (size_t i = 0; i < arr.size(); ++i) {
 		if (i != 0) ss << sep;
@@ -54,12 +54,12 @@ void readFile(const std::string &filename, std::vector<int> &Program, int &A, in
 
 enum Instructions { adv, bxl, bst, jnz, bxc, out, bdv, cdv };
 
-std::vector<int> solve(std::vector<int> program, int A, int B, int C, bool p2 = false) {
+std::vector<int> solve(const std::vector<int> &program, int A, int B, int C) {
 	std::vector<int> output;
 	int combo_operand;
 	for (size_t i = 0; i < program.size(); i += 2) {
-		int &opcode = program[i];
-		int &literal_operand = program[i + 1];
+		auto &opcode = program[i];
+		auto &literal_operand = program[i + 1];
 		combo_operand = literal_operand;
 
 		switch (literal_operand) {
