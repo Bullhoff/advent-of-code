@@ -133,7 +133,7 @@ int32_t main(int32_t argc, char *argv[]) {
 				matches++;
 			}
 		}
-		if (matches > maxMatches) maxMatches = matches;
+		if (matches > maxMatches || true) maxMatches = matches; /// "|| true" because some datasets get too many matches early
 		if (program.size() < output.size()) break;
 		int diff = program.size() - maxMatches;
 		if (diff == 0) {
