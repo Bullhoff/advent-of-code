@@ -42,27 +42,21 @@ template <typename T> bool includes(const std::set<T> &arr, const T &item) {
 
 int32_t main() {
 	auto t0 = std::chrono::high_resolution_clock::now();
-	int part1 = 0;
-	std::string part2;
 	std::map<std::string, std::vector<std::string>> arr;
 	readFile("data/day23.txt", arr);
 
 	/// part1
 	std::set<std::set<std::string>> sets;
 	for (auto const &[pc1, val] : arr) {
-		std::vector<std::string> set;
 		for (size_t i = 0; i < val.size(); ++i) {
-			std::string pc2 = val[i];
+			std::string &pc2 = arr[pc1][i];
 			for (size_t j = 0; j < arr[pc2].size(); ++j) {
-				std::string pc3 = arr[pc2][j];
+				std::string &pc3 = arr[pc2][j];
 				if ((pc1[0] == 't' || pc2[0] == 't' || pc3[0] == 't') && includes(arr[pc1], pc3)) { sets.insert({pc1, pc2, pc3}); }
 			}
 		}
 	}
-	for (size_t i = 0; i < sets.size(); ++i) {
-		auto theset = *std::next(sets.begin(), i);
-		if (find_if(theset.begin(), theset.end(), [](const std::string &s) { return s[0] == 't'; }) != theset.end()) { ++part1; }
-	}
+	int part1 = sets.size();
 
 	/// part2
 	auto get_connections = [&arr](auto &&self, std::string k1, std::string k2) -> std::vector<std::string> {
@@ -83,17 +77,17 @@ int32_t main() {
 		return resArr;
 	};
 	std::vector<std::string> largestSet;
-	for (auto const &[key, val] : arr) {
-		std::vector<std::string> theset({key});
+	for (auto const &[k1, val] : arr) {
+		std::vector<std::string> theset;
 		for (size_t i = 0; i < val.size(); ++i) {
-			std::string &k2 = arr[key][i];
-			std::vector<std::string> resArr = get_connections(get_connections, key, k2);
+			std::string &k2 = arr[k1][i];
+			std::vector<std::string> resArr = get_connections(get_connections, k1, k2);
 			if (resArr.size() > theset.size()) theset = resArr;
 		}
 		if (largestSet.size() < theset.size()) largestSet = theset;
 	}
 	std::sort(largestSet.begin(), largestSet.end(), [](const std::string &a, const std::string &b) { return a < b; });
-	part2 = join(largestSet);
+	std::string part2 = join(largestSet);
 
 	std::cout << DEBUG_INFO_S << duration_str(t0) << "  part1=\x1b[1m\x1b[38;2;155;255;15m" << part1 << "\x1b[0m part2=\x1b[1m\x1b[38;2;155;255;15m" << part2 << "\x1b[0m" << std::endl;
 	return 0;
