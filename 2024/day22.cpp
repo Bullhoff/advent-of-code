@@ -25,13 +25,17 @@ inline void solve(int &num) {
 	num = ((num * 2048) ^ num) % 16777216;
 }
 
+struct IdentityHash {
+	size_t operator()(uint16_t x) const { return x; }
+};
+
 int32_t main() {
 	auto t0 = std::chrono::high_resolution_clock::now();
 	int part1 = 0;
 	int part2 = 0;
 	std::vector<int> arr;
 	readFile("data/day22.txt", arr);
-	std::vector<std::unordered_map<uint16_t, uint8_t>> seqMap(arr.size(), std::unordered_map<uint16_t, uint8_t>());
+	std::vector<std::unordered_map<uint16_t, uint8_t, IdentityHash>> seqMap(arr.size(), std::unordered_map<uint16_t, uint8_t, IdentityHash>());
 	for (size_t i = 0; i < arr.size(); ++i) {
 		int &num = arr[i];
 		std::vector<uint8_t> digitsBuyer;
@@ -46,7 +50,7 @@ int32_t main() {
 				const uint8_t &d4 = digitsBuyer.back();
 				const uint8_t diff1 = (digitsBuyer.size() < 5) ? 0 : (d0 - d1 + 9);
 				const uint16_t compressed = ((diff1 + 9) << 12) | ((d1 - d2 + 9) << 8) | ((d2 - d3 + 9) << 4) | (d3 - d4 + 9);
-				if (seqMap[i].find(compressed) == seqMap[i].end()) { seqMap[i][compressed] = digitsBuyer.back(); }
+				seqMap[i].emplace(compressed, digitsBuyer.back());
 			}
 		}
 		part1 += num;
