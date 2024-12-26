@@ -1,5 +1,5 @@
 #pragma once
-
+#include <cstdlib>
 #include <cstring>
 #define __FILENAME__ (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 // clang-format off
@@ -27,6 +27,7 @@
 // clang-format on
 #define COLORFILE RED
 #define COLORLINE BOLDGREEN
+#define COLORNUMBER BOLDGREEN
 #define COLORFUNC BLUE
 #define DEBUG_INFO_S COLORFILE << __FILENAME__ << "\x1b[0m:" << COLORLINE << __LINE__ << "\x1b[0m:" << COLORFUNC << __func__ << "\x1b[0m  "
 
@@ -38,11 +39,9 @@
 inline void ltrim(std::string &s) {
 	s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](unsigned char ch) { return !std::isspace(ch); }));
 }
-
 inline void rtrim(std::string &s) {
 	s.erase(std::find_if(s.rbegin(), s.rend(), [](unsigned char ch) { return !std::isspace(ch); }).base(), s.end());
 }
-
 inline void trim(std::string &s) {
 	rtrim(s);
 	ltrim(s);
@@ -58,20 +57,17 @@ inline bool is_number(const std::string &s) {
 #include <chrono>
 #include <sstream>
 inline std::string duration_str(std::chrono::system_clock::time_point t0) {
-	auto t1 = std::chrono::high_resolution_clock::now();
+	using namespace std::chrono;
+	system_clock::time_point t1 = system_clock::now();
 	std::ostringstream oss;
 	oss << "Duration=\x1b[1m\x1b[38;2;155;255;15m";
-	auto diff = std::chrono::duration_cast<std::chrono::microseconds>(t1 - t0);
-	if (diff < std::chrono::microseconds(5000)) {
-		/// Less than 5000µs
+	auto diff = duration_cast<microseconds>(t1 - t0);
+	if (diff < microseconds(5000)) { /// Less than 5000µs
 		oss << diff.count() << "\x1b[0mµs";
-	} else if (diff < std::chrono::milliseconds(5000)) {
-		/// Less than 5000ms
-		auto ms_diff = std::chrono::duration_cast<std::chrono::milliseconds>(diff);
-		oss << ms_diff.count() << "\x1b[0mms";
+	} else if (diff < milliseconds(5000)) { /// Less than 5000ms
+		oss << duration_cast<milliseconds>(diff).count() << "\x1b[0mms";
 	} else {
-		auto s_diff = std::chrono::duration_cast<std::chrono::duration<float>>(diff);
-		oss << s_diff.count() << "\x1b[0ms";
+		oss << duration_cast<duration<float>>(diff).count() << "\x1b[0ms";
 	}
 	return oss.str();
 }
@@ -84,4 +80,134 @@ std::string generateRandomColor(bool bg = false) {
 	std::ostringstream oss;
 	oss << ((bg) ? "\x1b[48;2;" : "\x1b[38;2;") << dis(gen) << ";" << dis(gen) << ";" << dis(gen) << "m";
 	return oss.str();
+}
+int rand(int min = 0, int max = 1) {
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	std::uniform_int_distribution<> dis(min, max);
+	return dis(gen);
+}
+
+#include <vector>
+#include <map>
+#include <set>
+#include <unordered_set>
+#include <iostream>
+#include <type_traits>
+
+template <typename Container> void print_elements(std::ostream &os, const Container &container) {
+	os << "[";
+	auto it = container.begin();
+	if (it != container.end()) {
+		os << COLORNUMBER << *it << RESET;
+		++it;
+	}
+	for (; it != container.end(); ++it) { os << "," << COLORNUMBER << *it << RESET; }
+	os << "]";
+}
+// print vector
+template <typename T> std::ostream &operator<<(std::ostream &os, const std::vector<T> &arr) {
+	print_elements(os, arr);
+	return os;
+}
+// print set
+template <typename T> std::ostream &operator<<(std::ostream &os, const std::set<T> &arr) {
+	print_elements(os, arr);
+	return os;
+}
+// print unordered_set
+template <typename T> std::ostream &operator<<(std::ostream &os, const std::unordered_set<T> &arr) {
+	print_elements(os, arr);
+	return os;
+}
+// print 2d vector
+template <typename T> std::ostream &operator<<(std::ostream &os, const std::vector<std::vector<T>> &grid) {
+	for (size_t y = 0; y < grid.size(); ++y) {
+		for (size_t x = 0; x < grid[y].size(); ++x) { os << grid[y][x]; }
+		os << "\n";
+	}
+	return os;
+}
+
+namespace u {
+template <typename T> std::string join(const std::vector<T> &arr, const std::string sep = ",") {
+	std::stringstream ss;
+	for (size_t i = 0; i < arr.size(); ++i) {
+		if (i != 0) ss << sep;
+		ss << arr[i];
+	}
+	return ss.str();
+}
+template <typename T> bool includes(const std::vector<T> &arr, const T &item) {
+	return std::find(arr.begin(), arr.end(), item) != arr.end();
+}
+template <typename T> bool includes(const std::set<T> &arr, const T &item) {
+	return arr.find(item) != arr.end();
+}
+template <typename T1, typename T2> bool includes(const std::map<T1, T2> &arr, const T1 &item) {
+	return arr.find(item) != arr.end();
+}
+} // namespace u
+
+struct sCoordBase {
+	int x, y;
+	sCoordBase() {}
+	sCoordBase(int x, int y) : x(x), y(y) {}
+	friend std::ostream &operator<<(std::ostream &os, const sCoordBase &coord) { return os << "[" << COLORNUMBER << coord.x << RESET "," << COLORNUMBER << coord.y << RESET << "]"; }
+	sCoordBase set(int x, int y) {
+		this->x = x;
+		this->y = y;
+		return *this;
+	};
+	sCoordBase rotate(bool r = false) {
+		if (!r && y != 0) y = -y; // clockwise
+		else if (r && x != 0) x = -x; // counterclockwise
+		x ^= y;
+		y ^= x;
+		x ^= y;
+		return *this;
+	}
+	sCoordBase operator+=(const sCoordBase &other) {
+		x += other.x;
+		y += other.y;
+		return *this;
+	}
+	sCoordBase operator-=(const sCoordBase &other) {
+		x -= other.x;
+		y -= other.y;
+		return *this;
+	}
+	sCoordBase operator*=(const sCoordBase &other) {
+		x *= other.x;
+		y *= other.y;
+		return *this;
+	}
+	bool operator<(const sCoordBase &other) const {
+		if (x == other.x) { return y < other.y; }
+		return x < other.x;
+	}
+	bool operator>(const sCoordBase &other) const {
+		if (x == other.x) { return y > other.y; }
+		return x > other.x;
+	}
+	bool operator==(const sCoordBase &other) const { return x == other.x && y == other.y; }
+	bool operator!=(const sCoordBase &other) const { return x != other.x || y != other.y; }
+};
+inline sCoordBase operator+(const sCoordBase &a, const sCoordBase &b) {
+	return sCoordBase{a.x + b.x, a.y + b.y};
+}
+inline sCoordBase operator+(const sCoordBase &a, const int &d) {
+	return sCoordBase{a.x + d, a.y + d};
+}
+inline sCoordBase operator*(const sCoordBase &a, const sCoordBase &b) {
+	return sCoordBase{a.x * b.x, a.y * b.y};
+}
+inline sCoordBase operator*(const sCoordBase &a, const int &d) {
+	return sCoordBase{a.x * d, a.y * d};
+}
+inline sCoordBase operator-(const sCoordBase &a, const sCoordBase &b) {
+	return sCoordBase{a.x - b.x, a.y - b.y};
+}
+inline sCoordBase operator-(const sCoordBase &a, const int &d) {
+	return sCoordBase{a.x - d, a.y - d};
 }
