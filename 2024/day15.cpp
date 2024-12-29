@@ -11,10 +11,11 @@
 #include <thread>
 
 bool CONTROLIT = false;
-#include <termios.h>
 char getDir();
 
 bool PRINTIT = false;
+int getMaxVisibleRows();
+#define DELAYTEXT 500
 #define DELAY 500
 #define COLOREMPTY "\x1b[38;2;0;0;0m"
 #define COLORBOX "\x1b[38;2;50;250;50m"
@@ -22,36 +23,15 @@ bool PRINTIT = false;
 #define COLORPOS "\x1b[38;2;50;255;5m\x1b[48;2;155;55;55m"
 #define COLOREMPTY_START ""
 #define COLORBOX_START ""
-#define COLORWALL_START ""
+#define COLORWALL_START COLORWALL
 #define COLORPOS_START COLORPOS
 
-struct sCoord {
-	int x, y;
-	sCoord() {}
-	sCoord(int x, int y) : x(x), y(y) {}
-	void set(int x, int y) {
-		this->x = x;
-		this->y = y;
-	};
-	sCoord operator+=(const sCoord &other) {
-		x += other.x;
-		y += other.y;
-		return *this;
-	}
-	sCoord operator-=(const sCoord &other) {
-		x -= other.x;
-		y -= other.y;
-		return *this;
-	}
+struct sCoord : sCoordBase {
+	using sCoordBase::sCoordBase;
 };
-inline sCoord operator+(const sCoord &a, const sCoord &b) {
-	return sCoord{a.x + b.x, a.y + b.y};
-}
-inline sCoord operator*(const sCoord &a, int d) {
-	return sCoord{a.x * d, a.y * d};
-}
 
-inline bool isInGrid(const sCoord &coord, const std::vector<std::string> &grid) {
+template <typename T> inline bool isInGrid(const T &coord, const std::vector<std::string> &grid) {
+	static_assert(std::is_base_of<sCoordBase, T>::value, "T must be derived from sCoordBase");
 	return coord.x >= 0 && coord.y >= 0 && coord.x < grid[0].size() && coord.y < grid.size();
 }
 
@@ -86,32 +66,34 @@ void readFile(const std::string &file, std::vector<std::string> &arr, std::vecto
 }
 
 void printGrid(const std::vector<std::string> &arr) {
+	std::ostringstream oss;
 	for (size_t y = 0; y < arr.size(); ++y) {
 		for (size_t x = 0; x < arr[y].size(); ++x) {
-			char chr = arr[y][x];
-			if (chr == '[' || chr == ']' || chr == 'O') std::cout << COLORBOX_START;
-			if (chr == '<' || chr == 'v' || chr == '^' || chr == '>' || chr == '@') std::cout << COLORPOS_START;
-			if (chr == '#') std::cout << COLORWALL_START;
-			if (chr == '.') std::cout << COLOREMPTY_START;
-			if (chr == '[' || chr == ']' || chr == 'O') std::cout << COLORBOX_START;
-			std::cout << chr << "\x1b[0m";
+			const char &chr = arr[y][x];
+			if (chr == '[' || chr == ']' || chr == 'O') oss << COLORBOX_START;
+			else if (chr == '<' || chr == 'v' || chr == '^' || chr == '>' || chr == '@') oss << COLORPOS_START;
+			else if (chr == '#') oss << COLORWALL_START;
+			else if (chr == '.') oss << COLOREMPTY_START;
+			oss << chr << "\x1b[0m";
 		}
-		std::cout << std::endl;
+		oss << std::endl;
 	}
+	std::cout << oss.str();
 }
 
 void updateGrid(std::vector<std::string> &arr, const int x, const int y, const char chr) {
 	arr[y][x] = chr;
 	if (PRINTIT) {
-		std::cout << "\033[" << y + 1 << "H"; /// up
-		std::cout << "\033[" << x << "C"; /// right
-		if (chr == '<' || chr == 'v' || chr == '^' || chr == '>' || chr == '@') std::cout << COLORPOS;
-		if (chr == '#') std::cout << COLORWALL;
-		if (chr == '.') std::cout << COLOREMPTY;
-		if (chr == '[' || chr == ']' || chr == 'O') std::cout << COLORBOX;
-		std::cout << chr;
-		std::cout << "\x1b[0m";
-		std::cout << std::endl;
+		std::ostringstream oss;
+		oss << "\x1B[" << y + 1 << "H"; /// abs row
+		oss << "\x1B[" << x << "C"; /// col
+		if (chr == '<' || chr == 'v' || chr == '^' || chr == '>' || chr == '@') oss << COLORPOS;
+		else if (chr == '#') oss << COLORWALL;
+		else if (chr == '.') oss << COLOREMPTY;
+		else if (chr == '[' || chr == ']' || chr == 'O') oss << COLORBOX;
+		oss << chr;
+		oss << "\x1b[0m";
+		std::cout << oss.str() << std::endl;
 	}
 }
 
@@ -124,7 +106,9 @@ bool move(std::vector<std::string> &arr, const sCoord &dir, sCoord pos) {
 	return true;
 }
 
-bool moveP2(std::vector<std::string> &arr, const sCoord &dir, sCoord pos) {
+template <typename T1, typename T2> bool moveP2(std::vector<std::string> &arr, const T1 &dir, T2 pos) {
+	static_assert(std::is_base_of<sCoordBase, T1>::value, "T1 must be derived from sCoordBase");
+	static_assert(std::is_base_of<sCoordBase, T2>::value, "T2 must be derived from sCoordBase");
 	char chr = arr[pos.y][pos.x];
 	if (dir.y != 0 && chr == ']') {
 		pos.x -= 1;
@@ -144,7 +128,7 @@ bool moveP2(std::vector<std::string> &arr, const sCoord &dir, sCoord pos) {
 				if (arr[pos.y][pos.x + dir.x] == '[' && !moveP2(arr, dir, pos + dir * 2)) { return false; }
 			} else {
 				if (arr[pos.y][pos.x] == '#') return false;
-				if (arr[pos.y][pos.x + dir.x] == '[' && !moveP2(arr, dir, pos + dir * 0)) { return false; }
+				if (arr[pos.y][pos.x] == ']' && !moveP2(arr, dir, pos + dir * 1)) { return false; }
 			}
 		}
 	}
@@ -237,6 +221,16 @@ int32_t main(int argc, char *argv[]) {
 
 	/// part2
 	if (PRINTIT) {
+		int visibleRows = getMaxVisibleRows();
+		if (visibleRows < arr.size()) {
+			std::cout << "Requires \x1b[7m" << arr.size() << "\x1b[0m rows to print. Currently theres only \x1b[7m" << visibleRows << "\x1b[0m visible rows. Make the terminal bigger or zoom out." << std::endl;
+			PRINTIT = false;
+			CONTROLIT = false;
+		}
+	}
+	if (PRINTIT) {
+		std::ios_base::sync_with_stdio(false);
+		std::cin.tie(NULL);
 		system("clear");
 		printGrid(arrP2);
 	}
@@ -262,7 +256,6 @@ int32_t main(int argc, char *argv[]) {
 			break;
 		default:
 			return false;
-			break;
 		}
 		pos += dir;
 		if (arrP2[pos.y][pos.x] == '#') {
@@ -289,17 +282,98 @@ int32_t main(int argc, char *argv[]) {
 			loopP2(moves[i]); 
 		}
 	}
+
+	// clang-format off
+	std::map<char, std::vector<std::pair<int, int>>> chars = {
+		{'0', {{1,0}, {2,0}, {3,1}, {3,2}, {3,3}, {3,4}, {3,5}, {3,6}, {2,7}, {1,7}, {0,6}, {0,5}, {0,4}, {0,3}, {0,2}, {0,1}}},
+		{'1', {{1,0}, {2,0}, {2,1}, {2,2}, {2,3}, {2,4}, {2,5}, {2,6}, {2,7}, {1,7}, {3,7}}},
+		{'2', {{0,1}, {1,0}, {2,0}, {3,1}, {3,2}, {3,3}, {2,4}, {1,5}, {0,6}, {0,7}, {1,7}, {2,7}, {3,7}}},
+		{'3', {{0,1}, {1,0}, {2,0}, {3,1}, {3,2}, {3,3}, {2,3}, {3,4}, {3,5}, {3,6}, {2,7}, {1,7}, {0,6}}},
+		{'4', {{3,0}, {3,1}, {3,2}, {3,3}, {3,4}, {3,5}, {3,6}, {3,7}, {0,1},  {0,2}, {0,3}, {0,4}, {1,4}, {2,4}}},
+		{'5', {{0,0}, {1,0}, {2,0}, {3,0}, {0,1}, {0,2}, {0,3}, {1,3}, {2,3}, {3,4}, {3,5}, {3,6}, {2,7}, {1,7}, {0,6}}},
+		{'6', {{2,0}, {1,0}, {0,1}, {0,2}, {0,3}, {0,4}, {0,5}, {0,6}, {1,7}, {2,7}, {3,6}, {3,5}, {3,4}, {2,3}, {1,3}}},
+		{'7', {{0,0}, {1,0}, {2,0}, {3,0}, {3,1}, {3,2}, {2,3}, {2,4}, {1,5}, {1,6}, {1,7}}},
+		{'8', {{1,0}, {2,0}, {3,1}, {3,2}, {2,3}, {1,3}, {0,4}, {0,5}, {0,6}, {1,7}, {2,7}, {3,6}, {3,5}, {3,4}, {0,1}, {0,2}}},
+		{'9', {{1,0}, {2,0}, {3,1}, {3,2}, {3,3}, {2,4}, {1,4}, {0,3}, {0,2}, {0,1}, {3,4}, {3,5}, {3,6}, {2,7}, {1,7}, {0,6}}}
+	};
+	// clang-format on
+
+	auto setText = [&arrP2, &chars](std::string str, std::string style = "") -> void {
+		std::ostringstream oss;
+		const int fs = 8;
+		const int yPos = (arrP2.size() / 2) - (fs / 2);
+		const int xPos = (arrP2[0].size() / 2) - (fs / 2 * str.size());
+		for (size_t j = 0; j < str.size(); ++j) {
+			const char chr = str[j];
+			for (size_t i = 0; i < chars[chr].size(); ++i) {
+				auto p = chars[chr][i];
+				int x_ = fs * j + xPos + p.first + 0;
+				int y_ = yPos + p.second;
+				oss << "\x1B[" << y_ << ";" << x_ << "H";
+				oss << style;
+				oss << arrP2[y_ - 1][x_ - 1] << "\x1b[0m";
+			}
+		}
+		std::cout << oss.str() << std::endl;
+	};
+
+	std::string prevStr = "";
 	for (size_t y = 0; y < arrP2.size(); ++y) {
 		for (size_t x = 0; x < arrP2[y].size(); ++x) {
-			if (arrP2[y][x] == '[') { part2 += 100 * y + x; }
+			if (arrP2[y][x] == '[') {
+				part2 += 100 * y + x;
+				if (PRINTIT) {
+					std::string str = std::to_string(part2);
+					setText(prevStr, "");
+					setText(str, "\x1b[7m");
+					prevStr = str;
+					std::this_thread::sleep_for(std::chrono::microseconds(DELAYTEXT));
+				}
+			}
 		}
 	}
-	if (PRINTIT) std::cout << "\033[" << arrP2.size() << "H" << std::endl;
+	if (PRINTIT) std::cout << "\x1B[" << arrP2.size() << "H" << std::endl; /// move cursor to the bottom
 
 	std::cout << DEBUG_INFO_S << duration_str(t0) << "  part1=\x1b[1m\x1b[38;2;155;255;15m" << part1 << "\x1b[0m part2=\x1b[1m\x1b[38;2;155;255;15m" << part2 << "\x1b[0m" << std::endl;
 	return 0;
 }
 
+#ifdef _WIN32
+#include <windows.h>
+int getMaxVisibleRows() {
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) { return csbi.srWindow.Bottom - csbi.srWindow.Top + 1; }
+	return -1; 
+}
+#else
+#include <sys/ioctl.h>
+#include <unistd.h>
+int getMaxVisibleRows() {
+	struct winsize w;
+	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) != -1) { return w.ws_row; }
+	return -1; 
+}
+#endif
+
+#ifdef _WIN32
+#include <windows.h>
+int getch(void) {
+	HANDLE hStdin = GetStdHandle(STD_INPUT_HANDLE);
+	INPUT_RECORD irInputRecord;
+	DWORD dwEventsRead;
+	char cChar;
+	while (ReadConsoleInputA(hStdin, &irInputRecord, 1, &dwEventsRead)) {
+		if (irInputRecord.EventType == KEY_EVENT && irInputRecord.Event.KeyEvent.bKeyDown) {
+			cChar = irInputRecord.Event.KeyEvent.uChar.AsciiChar;
+			FlushConsoleInputBuffer(hStdin);
+			return cChar;
+		}
+	}
+	return 0;
+}
+#else
+#include <termios.h>
+#include <unistd.h>
 int getch(void) {
 	int ch;
 	struct termios oldt;
@@ -312,6 +386,8 @@ int getch(void) {
 	tcsetattr(STDIN_FILENO, TCSANOW, &oldt); 
 	return ch; 
 }
+#endif
+
 char getDir() {
 	int x = ' ', y = ' ', z = ' ';
 	x = getch();
@@ -323,16 +399,12 @@ char getDir() {
 		switch (z) {
 		case 65:
 			return '^';
-			break;
 		case 66:
 			return 'v';
-			break;
 		case 67:
 			return '>';
-			break;
 		case 68:
 			return '<';
-			break;
 		case 113:
 			return 'q';
 		}
