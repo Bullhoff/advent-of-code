@@ -10,7 +10,12 @@
 #include <vector>
 #include <map>
 #include <set>
-#include <functional>
+#include <thread>
+
+#define 🍕 true
+#define GRID_COLUMN_WIDTH 2
+#define DELAY 0
+int getMaxVisibleRows();
 
 struct sCoord {
 	int x, y;
@@ -18,19 +23,20 @@ struct sCoord {
 	int pY = -1;
 	int cost = 0;
 	int turns = 0;
-
+	int steps = 0;
+	bool pp = false;
+	char chr;
 	sCoord() {}
 	sCoord(int x, int y) : x(x), y(y) {}
 	sCoord(int x, int y, int pX, int pY) : x(x), y(y), pX(pX), pY(pY) {}
 	sCoord(int x, int y, int pX, int pY, int cost, int turns) : x(x), y(y), pX(pX), pY(pY), cost(cost), turns(turns) {}
-	friend std::ostream &operator<<(std::ostream &os, const sCoord &coord) { return os << "[" << coord.x << "," << coord.y << "]"; }
-	sCoord rotate() {
-		if (y == -1) y = 1;
-		else if (y == 1) y = -1;
+	sCoord rotate(bool r = false) {
+		if (!r && y != 0) y = -y; 
+		else if (r && x != 0) x = -x; 
 		x ^= y;
 		y ^= x;
 		x ^= y;
-		return sCoord(x, y);
+		return *this;
 	}
 	void set(int x, int y) {
 		this->x = x;
@@ -40,43 +46,19 @@ struct sCoord {
 		if (pX != -1 && pY != -1) { return sCoord(x - pX, y - pY); }
 		return sCoord(0, 0);
 	}
-	sCoord operator+=(const sCoord &other) {
-		x += other.x;
-		y += other.y;
-		return *this;
-	}
-	sCoord operator-=(const sCoord &other) {
-		x -= other.x;
-		y -= other.y;
-		return *this;
-	}
 	bool operator<(const sCoord &other) const {
 		if (x == other.x) { return y < other.y; }
 		return x < other.x;
 	}
-	bool operator>(const sCoord &other) const {
-		if (x == other.x) { return y > other.y; }
-		return x > other.x;
-	}
 	bool operator==(const sCoord &other) const { return x == other.x && y == other.y; }
 	bool operator!=(const sCoord &other) const { return x != other.x || y != other.y; }
 };
-
 inline sCoord operator+(const sCoord &a, const sCoord &b) {
 	return sCoord{a.x + b.x, a.y + b.y};
-}
-inline sCoord operator*(const sCoord &a, int d) {
-	return sCoord{a.x * d, a.y * d};
 }
 
 inline bool isInGrid(const sCoord &coord, const std::vector<std::string> &grid) {
 	return coord.x >= 0 && coord.y >= 0 && coord.x < grid[0].size() && coord.y < grid.size();
-}
-
-int getIndex(const std::vector<sCoord> &v, const std::function<bool(const sCoord &)> &predicate) {
-	auto it = std::find_if(v.begin(), v.end(), predicate);
-	if (it != v.end()) return static_cast<int>(std::distance(v.begin(), it));
-	else return -1;
 }
 
 void readFile(const std::string &file, std::vector<std::string> &arr) {
@@ -88,66 +70,30 @@ void readFile(const std::string &file, std::vector<std::string> &arr) {
 	}
 }
 
-void printGrid(const std::vector<std::string> &arr) {
-	for (size_t y = 0; y < arr.size(); ++y) {
-		for (size_t x = 0; x < arr[y].size(); ++x) {
-			if (arr[y][x] == '#') std::cout << "\x1b[48;2;155;155;155m";
-			std::cout << "" << arr[y][x] << "\x1b[0m";
-		}
-		std::cout << std::endl;
-	}
-}
-void printGrid(const std::vector<std::string> &arr, const std::vector<sCoord> &hl, const sCoord &endPos = sCoord(), const bool &replace = false) {
-	if (replace) { std::cout << "\033[" << arr.size() << "A"; }
-	for (size_t y = 0; y < arr.size(); ++y) {
-		for (size_t x = 0; x < arr[y].size(); ++x) {
-			if (y == endPos.y && x == endPos.x) std::cout << "\x1b[48;2;0;0;250m\x1b[38;2;0;0;250m";
-			else if (arr[y][x] == '#') std::cout << "\x1b[48;2;0;0;0m\x1b[38;2;0;0;0m";
-			else if (arr[y][x] == 'x') std::cout << "\x1b[48;2;155;155;0m";
-			else std::cout << "\x1b[48;2;155;155;155m";
-			for (size_t i = 0; i < hl.size(); ++i) {
-				if (hl[i].x == x && hl[i].y == y) {
-					std::cout << "\x1b[48;2;0;255;0m";
-					break;
-				}
+void printGrid(const std::vector<std::string> &grid, const std::set<sCoord> hls = std::set<sCoord>(), int cellWidth = GRID_COLUMN_WIDTH) {
+	std::ostringstream oss;
+	for (size_t y = 0; y < grid.size(); ++y) {
+		for (size_t x = 0; x < grid[y].size(); ++x) {
+			for (const sCoord &p : hls) {
+				if (p.x == x && p.y == y) oss << "\x1b[48;2;0;255;0m";
 			}
-			std::cout << " " << arr[y][x] << "\x1b[0m";
+			for (size_t i = 0; i < cellWidth; ++i) { oss << "" << grid[y][x] << ""; }
+			oss << "\x1b[0m";
 		}
-		std::cout << std::endl;
+		oss << std::endl;
 	}
-}
-std::map<int, std::string> hls;
-void printGrid(const std::vector<std::string> &arr, std::vector<sCoord> hl, std::vector<std::vector<sCoord>> arr2 = std::vector<std::vector<sCoord>>()) {
-	for (size_t y = 0; y < arr.size(); ++y) {
-		for (size_t x = 0; x < arr[y].size(); ++x) {
-			if (arr[y][x] == '#') std::cout << "\x1b[48;2;155;155;155m";
-			for (size_t i = 0; i < hl.size(); ++i) {
-				if (hl[i].x == x && hl[i].y == y) std::cout << "\x1b[48;2;155;255;155m";
-			}
-			if (arr[y][x] == '.') std::cout << "\x1b[48;2;255;0;0m";
-			if (arr[y][x] == '.') std::cout << "\x1b[38;2;255;0;0m";
-			if (arr2.size() > y && arr2[y][x].turns > 0) {
-				if (!hls.count(arr2[y][x].turns)) hls[arr2[y][x].turns] = generateRandomColor();
-				std::cout << hls[arr2[y][x].turns];
-			}
-			std::cout << "" << arr[y][x] << "\x1b[0m";
-		}
-		std::cout << std::endl;
-	}
+	std::cout << oss.str();
 }
 
-std::vector<sCoord> getShortestPath(const std::vector<sCoord> &processed, const sCoord &startPos, const sCoord &endPos) {
-	sCoord curr;
+std::vector<sCoord> getShortestPath(std::vector<std::vector<sCoord>> &grid, const sCoord &startPos, const sCoord &endPos, bool rec = true) {
 	std::vector<sCoord> projectedPath;
-	int index = getIndex(processed, [&endPos](const sCoord &coord) -> bool { return endPos.x == coord.x && endPos.y == coord.y; });
-	curr = processed[index];
+	sCoord curr = grid[endPos.y][endPos.x];
 	projectedPath.emplace_back(curr);
 	while (true) {
-		index = getIndex(processed, [&curr](const sCoord &coord) -> bool { return curr.pX == coord.x && curr.pY == coord.y; });
-		if (index == -1) { break; }
-		curr = processed[index];
+		if (rec) grid[curr.x][curr.x].pp = true;
 		projectedPath.emplace_back(curr);
 		if (startPos.x == curr.x && startPos.y == curr.y) break;
+		curr = grid[curr.pY][curr.pX];
 	}
 	return projectedPath;
 }
@@ -156,16 +102,20 @@ int32_t main(int argc, char *argv[]) {
 	auto t0 = std::chrono::high_resolution_clock::now();
 	bool printmanystuff = (argc > 1 && argv[1][0] == 'a') ? true : false;
 	bool printstuff = (argc > 1) ? true : false;
-	bool printed = false;
 	int part1 = 0;
 	int part2 = 0;
 	std::vector<std::string> arr;
 	readFile("data/day16.txt", arr);
+	std::vector<std::vector<sCoord>> grid(arr.size(), std::vector<sCoord>(arr[0].size(), sCoord())); 
+	std::vector<std::string> gridChecked(arr);
 	sCoord gridSize(arr[0].size(), arr.size());
 	sCoord startPos;
 	sCoord endPos;
 	for (size_t y = 0; y < arr.size(); ++y) {
 		for (size_t x = 0; x < arr[y].size(); ++x) {
+			grid[y][x].chr = arr[y][x];
+			grid[y][x].y = y;
+			grid[y][x].x = x;
 			if (arr[y][x] == 'S') {
 				startPos.set(x, y);
 				startPos.pX = x - 1;
@@ -174,20 +124,44 @@ int32_t main(int argc, char *argv[]) {
 			if (arr[y][x] == 'E') { endPos.set(x, y); }
 		}
 	}
-	std::vector<std::string> gridChecked(arr);
+
+	int visibleRows;
+	if (printmanystuff) {
+		visibleRows = getMaxVisibleRows();
+		if (visibleRows < arr.size()) {
+			std::cout << "Requires \x1b[7m" << arr.size() << "\x1b[0m rows to print. Currently theres only \x1b[7m" << visibleRows << "\x1b[0m visible rows. Make the terminal bigger or zoom out." << std::endl;
+			printmanystuff = false;
+		}
+	}
+	if (printmanystuff) {
+		std::ios_base::sync_with_stdio(false);
+		std::cin.tie(NULL);
+		printGrid(arr);
+	}
+	auto setCells = [&arr, &visibleRows](const std::vector<sCoord> &path, std::string style = "") -> void {
+		std::ostringstream oss;
+		for (size_t i = 0; i < path.size(); ++i) {
+			oss << "\x1B[" << (visibleRows - arr.size() - 1) + (path[i].y + 1) << ";" << (path[i].x) * GRID_COLUMN_WIDTH + 1 << "H";
+			oss << style;
+			for (size_t i = 0; i < GRID_COLUMN_WIDTH; ++i) oss << arr[path[i].y][path[i].x];
+			oss << "\x1b[0m";
+		}
+		std::cout << oss.str() << std::endl;
+	};
+
+	std::vector<sCoord> shortestPath0;
+	std::vector<sCoord> shortestPath;
 	std::vector<sCoord> queue({startPos});
-	std::vector<sCoord> processed;
-	sCoord curr;
-	std::vector<std::vector<sCoord>> grid(arr.size(), std::vector<sCoord>(arr[0].size(), sCoord())); /// for part2
 	std::vector<sCoord> dirs{{-1, 0}, {0, 1}, {0, -1}, {1, 0}};
+	sCoord curr;
 	while (queue.size() > 0) {
 		std::sort(queue.begin(), queue.end(), [](const auto &a, const auto &b) { return a.cost > b.cost; });
 		curr = queue.back();
 		queue.pop_back();
-		processed.emplace_back(curr);
-		grid[processed.back().y][processed.back().x] = processed.back(); /// for part2
+		if (curr.y != -1 && curr.x != -1 && gridChecked[curr.y][curr.x] == 'x') { continue; }
+		grid[curr.y][curr.x] = curr; 
 		gridChecked[curr.y][curr.x] = 'x';
-		if (false && curr == endPos) break; /// false because part2
+		if (curr == endPos) break; 
 		if (curr.pX != -1 && curr.pY != -1) {
 			dirs.clear();
 			sCoord dir = curr.dir();
@@ -199,24 +173,25 @@ int32_t main(int argc, char *argv[]) {
 		for (unsigned int i = 0; i < dirs.size(); i++) {
 			const sCoord dir = curr + dirs[i];
 			if (!isInGrid(dir, arr)) continue;
-			if (gridChecked[dir.y][dir.x] == 'x' || gridChecked[dir.y][dir.x] == '#') continue;
-			gridChecked[dir.y][dir.x] = 'x';
+			if (gridChecked[dir.y][dir.x] == 'x' || gridChecked[dir.y][dir.x] == '#') { continue; }
 			queue.emplace_back(sCoord(dir.x, dir.y, curr.x, curr.y, curr.cost + 1, curr.turns));
+			queue.back().steps += curr.steps + 1;
 			if (dirs[i] != curr.dir()) {
-				queue.back().cost += 1000;
+				queue.back().cost += 1000 * 1;
 				queue.back().turns += 1;
 			}
 		}
-		if (printmanystuff)
-			if (abs(queue.back().x - curr.x) > 15 || abs(queue.back().y - curr.y) > 15) {
-				std::vector<sCoord> shortestPath = getShortestPath(processed, startPos, processed.back());
-				if (!printed) { system("clear"); }
-				printGrid(gridChecked, shortestPath, endPos, printed);
-				printed = true;
-			}
+		if (printmanystuff) {
+			shortestPath = getShortestPath(grid, startPos, curr, false);
+			if (shortestPath0.size() > 0) setCells(shortestPath0, "\x1b[48;2;85;85;0m"); /// clear green
+			setCells(shortestPath, "\x1b[48;2;0;255;0m"); /// make green
+			shortestPath0 = shortestPath;
+			std::this_thread::sleep_for(std::chrono::microseconds(DELAY));
+		}
 	}
-	std::vector<sCoord> projectedPath = getShortestPath(processed, startPos, endPos);
-	std::reverse(projectedPath.begin(), projectedPath.end());
+	if (printmanystuff) setCells(shortestPath, "\x1b[48;2;85;85;0m"); /// clear greens
+
+	std::vector<sCoord> projectedPath = getShortestPath(grid, startPos, endPos);
 	for (size_t i = 1; i < projectedPath.size(); ++i) {
 		sCoord &path = projectedPath[i];
 		sCoord &p1 = projectedPath[i - 1];
@@ -228,33 +203,77 @@ int32_t main(int argc, char *argv[]) {
 			if (p1.dir() != p2.dir()) { part1 += 1000; }
 	}
 
-	/// "part 2"
-	std::vector<sCoord> anotherQueue({projectedPath.back()});
+	/// part2
+	std::vector<sCoord> anotherQueue;
 	std::set<sCoord> bestSpots;
-	while (anotherQueue.size() > 0) {
-		curr = anotherQueue.back();
-		anotherQueue.pop_back();
-		bestSpots.insert(curr);
-		std::vector<sCoord> costs;
-		sCoord dir = curr.dir();
-		if (grid[curr.y + dir.y][curr.x + dir.x].cost > 0) { costs.push_back(grid[curr.y + dir.y][curr.x + dir.x]); }
+	for (size_t i = 1; i < projectedPath.size(); ++i) {
+		sCoord &prev = projectedPath[i - 1];
+		sCoord &pp = projectedPath[i];
+		bestSpots.insert(pp);
+		sCoord dir = pp.dir();
+		std::vector<sCoord> toCheck;
+		toCheck.push_back(grid[pp.y + dir.y][pp.x + dir.x]);
 		dir.rotate();
-		if (grid[curr.y + dir.y][curr.x + dir.x].cost > 0) { costs.push_back(grid[curr.y + dir.y][curr.x + dir.x]); }
+		toCheck.push_back(grid[pp.y + dir.y][pp.x + dir.x]);
 		dir.rotate();
-		if (grid[curr.y + dir.y][curr.x + dir.x].cost > 0) { costs.push_back(grid[curr.y + dir.y][curr.x + dir.x]); }
+		toCheck.push_back(grid[pp.y + dir.y][pp.x + dir.x]);
 		dir.rotate();
-		if (grid[curr.y + dir.y][curr.x + dir.x].cost > 0) { costs.push_back(grid[curr.y + dir.y][curr.x + dir.x]); }
-		for (size_t i = 0; i < costs.size(); ++i) {
-			int thecost = costs[i].cost;
-			if (curr.turns != costs[i].turns && curr != endPos) { thecost += 1000 * (curr.turns - costs[i].turns); }
-			const bool is_in = bestSpots.find(costs[i]) != bestSpots.end();
-			if (!is_in && thecost + 1 == curr.cost) { anotherQueue.push_back(costs[i]); }
-
+		toCheck.push_back(grid[pp.y + dir.y][pp.x + dir.x]);
+		dir.rotate();
+		for (size_t j = 0; j < toCheck.size(); ++j) {
+			sCoord &p = toCheck[j];
+			if (gridChecked[p.y][p.x] == '#') continue;
+			if (grid[p.y][p.x].pp) continue;
+			if (grid[prev.y][prev.x].dir() == p.dir()) {
+				if (p.cost - 1000 + 1 == pp.cost || p.cost + 1 == pp.cost) {
+					bestSpots.insert(p);
+					anotherQueue.push_back(p);
+				}
+			} else if (p.cost + 1000 + 1 == pp.cost) {
+				bestSpots.insert(p);
+				anotherQueue.push_back(p);
+			} else if (p.cost + 1 == pp.cost) {
+				bestSpots.insert(p);
+				anotherQueue.push_back(p);
+			}
+		}
+		while (anotherQueue.size() > 0) {
+			sCoord p = anotherQueue.back();
+			anotherQueue.pop_back();
+			if (!isInGrid(p, arr)) continue;
+			bestSpots.insert(p);
+			if (gridChecked[p.pY][p.pX] == '#') continue;
+			if (grid[p.y][p.x].pp) continue;
+			if (p.pY == -1) continue;
+			anotherQueue.push_back(grid[p.pY][p.pX]);
 		}
 	}
-	if (printstuff) printGrid(gridChecked, std::vector<sCoord>(bestSpots.begin(), bestSpots.end()), grid);
-	part2 = bestSpots.size() + 1;
+	if (🍕== true) part2 = bestSpots.size();
+
+	if (printmanystuff) {
+		setCells(std::vector<sCoord>(bestSpots.begin(), bestSpots.end()), "\x1b[48;2;150;255;255m");
+		std::cout << "\033[" << arr.size() + 99999 << "H" << std::endl;
+	} else if (printstuff) {
+		printGrid(arr, bestSpots, 1);
+	}
 
 	std::cout << DEBUG_INFO_S << duration_str(t0) << "  part1=\x1b[1m\x1b[38;2;155;255;15m" << part1 << "\x1b[0m part2=\x1b[1m\x1b[38;2;155;255;15m" << part2 << "\x1b[0m" << std::endl;
 	return 0;
 }
+
+#ifdef _WIN32
+#include <windows.h>
+int getMaxVisibleRows() {
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) { return csbi.srWindow.Bottom - csbi.srWindow.Top + 1; }
+	return -1; 
+}
+#else
+#include <sys/ioctl.h>
+#include <unistd.h>
+int getMaxVisibleRows() {
+	struct winsize w;
+	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) != -1) { return w.ws_row; }
+	return -1; 
+}
+#endif
