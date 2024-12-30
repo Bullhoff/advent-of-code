@@ -30,6 +30,7 @@ struct sCoord {
 	sCoord(int x, int y) : x(x), y(y) {}
 	sCoord(int x, int y, int pX, int pY) : x(x), y(y), pX(pX), pY(pY) {}
 	sCoord(int x, int y, int pX, int pY, int cost, int turns) : x(x), y(y), pX(pX), pY(pY), cost(cost), turns(turns) {}
+	friend std::ostream &operator<<(std::ostream &os, const sCoord &coord) { return os << "[" << coord.x << "," << coord.y << "]"; }
 	sCoord rotate(bool r = false) {
 		if (!r && y != 0) y = -y; 
 		else if (r && x != 0) x = -x; 
@@ -74,6 +75,7 @@ void printGrid(const std::vector<std::string> &grid, const std::set<sCoord> hls 
 	std::ostringstream oss;
 	for (size_t y = 0; y < grid.size(); ++y) {
 		for (size_t x = 0; x < grid[y].size(); ++x) {
+			char chr = grid[y][x];
 			for (const sCoord &p : hls) {
 				if (p.x == x && p.y == y) oss << "\x1b[48;2;0;255;0m";
 			}
@@ -113,6 +115,7 @@ int32_t main(int argc, char *argv[]) {
 	sCoord endPos;
 	for (size_t y = 0; y < arr.size(); ++y) {
 		for (size_t x = 0; x < arr[y].size(); ++x) {
+			if (arr[y][x] == '.') arr[y][x] = ' ';
 			grid[y][x].chr = arr[y][x];
 			grid[y][x].y = y;
 			grid[y][x].x = x;
@@ -158,7 +161,12 @@ int32_t main(int argc, char *argv[]) {
 		std::sort(queue.begin(), queue.end(), [](const auto &a, const auto &b) { return a.cost > b.cost; });
 		curr = queue.back();
 		queue.pop_back();
-		if (curr.y != -1 && curr.x != -1 && gridChecked[curr.y][curr.x] == 'x') { continue; }
+		if (curr.y != -1 && curr.x != -1 && gridChecked[curr.y][curr.x] == 'x') {
+			sCoord dirC = curr.dir();
+			sCoord dirN = grid[curr.y][curr.x].dir();
+			if (grid[curr.y + dirN.y][curr.x + dirN.x].chr != '#') continue;
+			if (grid[curr.y + dirC.y][curr.x + dirC.x].chr == '#') continue;
+		}
 		grid[curr.y][curr.x] = curr; 
 		gridChecked[curr.y][curr.x] = 'x';
 		if (curr == endPos) break; 
@@ -171,9 +179,9 @@ int32_t main(int argc, char *argv[]) {
 			dirs.emplace_back(dir.rotate());
 		}
 		for (unsigned int i = 0; i < dirs.size(); i++) {
-			const sCoord dir = curr + dirs[i];
+			const auto dir = curr + dirs[i];
 			if (!isInGrid(dir, arr)) continue;
-			if (gridChecked[dir.y][dir.x] == 'x' || gridChecked[dir.y][dir.x] == '#') { continue; }
+			if (gridChecked[dir.y][dir.x] == '#') continue;
 			queue.emplace_back(sCoord(dir.x, dir.y, curr.x, curr.y, curr.cost + 1, curr.turns));
 			queue.back().steps += curr.steps + 1;
 			if (dirs[i] != curr.dir()) {
@@ -189,19 +197,9 @@ int32_t main(int argc, char *argv[]) {
 			std::this_thread::sleep_for(std::chrono::microseconds(DELAY));
 		}
 	}
-	if (printmanystuff) setCells(shortestPath, "\x1b[48;2;85;85;0m"); /// clear greens
-
+	if (printmanystuff) setCells(shortestPath, "\x1b[48;2;85;85;0m"); /// clear green
 	std::vector<sCoord> projectedPath = getShortestPath(grid, startPos, endPos);
-	for (size_t i = 1; i < projectedPath.size(); ++i) {
-		sCoord &path = projectedPath[i];
-		sCoord &p1 = projectedPath[i - 1];
-		sCoord &p2 = projectedPath[i];
-		if (p1 == p2) continue;
-		part1++;
-		if ((p1.dir().x == 0 && p1.dir().y == 0) || (p2.dir().x == 0 && p2.dir().y == 0)) continue;
-		if (!(p1.dir().x == 0 && p1.dir().y == 0) || !(p2.dir().x == 0 && p2.dir().y == 0))
-			if (p1.dir() != p2.dir()) { part1 += 1000; }
-	}
+	part1 = grid[endPos.y][endPos.x].cost;
 
 	/// part2
 	std::vector<sCoord> anotherQueue;
@@ -224,12 +222,7 @@ int32_t main(int argc, char *argv[]) {
 			sCoord &p = toCheck[j];
 			if (gridChecked[p.y][p.x] == '#') continue;
 			if (grid[p.y][p.x].pp) continue;
-			if (grid[prev.y][prev.x].dir() == p.dir()) {
-				if (p.cost - 1000 + 1 == pp.cost || p.cost + 1 == pp.cost) {
-					bestSpots.insert(p);
-					anotherQueue.push_back(p);
-				}
-			} else if (p.cost + 1000 + 1 == pp.cost) {
+			if (p.cost + 1000 + 1 == pp.cost) {
 				bestSpots.insert(p);
 				anotherQueue.push_back(p);
 			} else if (p.cost + 1 == pp.cost) {
@@ -242,10 +235,22 @@ int32_t main(int argc, char *argv[]) {
 			anotherQueue.pop_back();
 			if (!isInGrid(p, arr)) continue;
 			bestSpots.insert(p);
+			grid[p.y][p.x].pp = true;
 			if (gridChecked[p.pY][p.pX] == '#') continue;
-			if (grid[p.y][p.x].pp) continue;
 			if (p.pY == -1) continue;
 			anotherQueue.push_back(grid[p.pY][p.pX]);
+			sCoord dir2 = p.dir();
+			if (p != grid[p.y + dir2.y][p.x + dir2.x] && grid[p.pY][p.pX] != grid[p.y + dir2.y][p.x + dir2.x] && grid[p.y + dir2.y][p.x + dir2.x].chr != '#' && grid[p.y + dir2.y][p.x + dir2.x].cost == p.cost - 1001) anotherQueue.push_back(grid[p.y + dir2.y][p.x + dir2.x]);
+			if (isInGrid(sCoord(p.x - dir2.x * 2, p.y - dir2.y * 2), arr))
+				if (grid[p.y - dir2.y * 2][p.x - dir2.x * 2].dir() == p.dir())
+					if (!grid[p.y - dir2.y * 2][p.x - dir2.x * 2].pp)
+						if (grid[p.y - dir2.y * 2][p.x - dir2.x * 2].cost == p.cost - 2) anotherQueue.push_back(grid[p.y - dir2.y * 2][p.x - dir2.x * 2]);
+			dir2.rotate();
+			if (p != grid[p.y + dir2.y][p.x + dir2.x] && grid[p.pY][p.pX] != grid[p.y + dir2.y][p.x + dir2.x] && grid[p.y + dir2.y][p.x + dir2.x].chr != '#' && grid[p.y + dir2.y][p.x + dir2.x].cost == p.cost - 1001) anotherQueue.push_back(grid[p.y + dir2.y][p.x + dir2.x]);
+			dir2.rotate();
+			if (p != grid[p.y + dir2.y][p.x + dir2.x] && grid[p.pY][p.pX] != grid[p.y + dir2.y][p.x + dir2.x] && grid[p.y + dir2.y][p.x + dir2.x].chr != '#' && grid[p.y + dir2.y][p.x + dir2.x].cost == p.cost - 1001) anotherQueue.push_back(grid[p.y + dir2.y][p.x + dir2.x]);
+			dir2.rotate();
+			if (p != grid[p.y + dir2.y][p.x + dir2.x] && grid[p.pY][p.pX] != grid[p.y + dir2.y][p.x + dir2.x] && grid[p.y + dir2.y][p.x + dir2.x].chr != '#' && grid[p.y + dir2.y][p.x + dir2.x].cost == p.cost - 1001) anotherQueue.push_back(grid[p.y + dir2.y][p.x + dir2.x]);
 		}
 	}
 	if (🍕== true) part2 = bestSpots.size();
