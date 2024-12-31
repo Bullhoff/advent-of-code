@@ -4,20 +4,21 @@
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
+#include <ostream>
 #include <string>
 #include <unistd.h>
 #include <cmath>
 #include <vector>
 #include <thread>
+#include <csignal>
 
 bool CONTROLIT = false;
 char getDir();
 
 bool PRINTIT = false;
-int getMaxVisibleRows();
-#define DELAYTEXT 500
+#define DELAYTEXT 5000
 #define DELAY 500
-#define COLOREMPTY "\x1b[38;2;0;0;0m"
+#define COLOREMPTY "\x1b[8m"
 #define COLORBOX "\x1b[38;2;50;250;50m"
 #define COLORWALL "\x1b[38;2;255;255;255m"
 #define COLORPOS "\x1b[38;2;50;255;5m\x1b[48;2;155;55;55m"
@@ -25,6 +26,13 @@ int getMaxVisibleRows();
 #define COLORBOX_START ""
 #define COLORWALL_START COLORWALL
 #define COLORPOS_START COLORPOS
+void exitHandler() {
+	if (PRINTIT) std::cout << "\x1b[?25h" << std::flush; /// show cursor
+	if (PRINTIT) std::cout << "\x1b[9999999;1H" << std::flush; /// move cursor to end
+}
+void signalHandler(int signum) {
+	std::exit(signum);
+}
 
 struct sCoord : sCoordBase {
 	using sCoordBase::sCoordBase;
@@ -76,24 +84,24 @@ void printGrid(const std::vector<std::string> &arr) {
 			else if (chr == '.') oss << COLOREMPTY_START;
 			oss << chr << "\x1b[0m";
 		}
-		oss << std::endl;
+		if (y != arr.size() - 1) oss << std::endl;
 	}
-	std::cout << oss.str();
+	std::cout << oss.str() << std::flush;
 }
 
 void updateGrid(std::vector<std::string> &arr, const int x, const int y, const char chr) {
 	arr[y][x] = chr;
 	if (PRINTIT) {
 		std::ostringstream oss;
-		oss << "\x1B[" << y + 1 << "H"; /// abs row
+		oss << "\x1b[999999;1H";
+		oss << "\x1b[" << (arr.size() - (y + 1)) << "A";
 		oss << "\x1B[" << x << "C"; /// col
 		if (chr == '<' || chr == 'v' || chr == '^' || chr == '>' || chr == '@') oss << COLORPOS;
 		else if (chr == '#') oss << COLORWALL;
 		else if (chr == '.') oss << COLOREMPTY;
 		else if (chr == '[' || chr == ']' || chr == 'O') oss << COLORBOX;
-		oss << chr;
-		oss << "\x1b[0m";
-		std::cout << oss.str() << std::endl;
+		oss << chr << "\x1b[0m";
+		std::cout << oss.str() << std::flush;
 	}
 }
 
@@ -170,6 +178,11 @@ template <typename T1, typename T2> bool moveP2(std::vector<std::string> &arr, c
 int32_t main(int argc, char *argv[]) {
 	if (argc > 1) PRINTIT = true;
 	if (argc > 1 && argv[1][0] == 'c') CONTROLIT = true;
+	if (CONTROLIT) PRINTIT = true;
+	std::atexit(exitHandler);
+	std::signal(SIGINT, signalHandler);
+	std::signal(SIGTERM, signalHandler);
+	std::signal(SIGABRT, signalHandler);
 	auto t0 = std::chrono::high_resolution_clock::now();
 	int part1 = 0;
 	int part2 = 0;
@@ -221,17 +234,9 @@ int32_t main(int argc, char *argv[]) {
 
 	/// part2
 	if (PRINTIT) {
-		int visibleRows = getMaxVisibleRows();
-		if (visibleRows < arr.size()) {
-			std::cout << "Requires \x1b[7m" << arr.size() << "\x1b[0m rows to print. Currently theres only \x1b[7m" << visibleRows << "\x1b[0m visible rows. Make the terminal bigger or zoom out." << std::endl;
-			PRINTIT = false;
-			CONTROLIT = false;
-		}
-	}
-	if (PRINTIT) {
 		std::ios_base::sync_with_stdio(false);
 		std::cin.tie(NULL);
-		system("clear");
+		std::cout << "\x1b[?25l" << std::flush; /// hide cursor
 		printGrid(arrP2);
 	}
 	for (size_t y = 0; y < arrP2.size(); ++y) {
@@ -240,7 +245,8 @@ int32_t main(int argc, char *argv[]) {
 		}
 	}
 	pos = startPos;
-	auto loopP2 = [&arrP2, &pos, &dir](char chr) -> bool {
+	std::vector<std::string> arrP2Copy(arrP2);
+	auto loopP2 = [&arrP2, &pos, &dir, &arrP2Copy](const char chr) -> bool {
 		switch (chr) {
 		case '<':
 			dir.set(-1, 0);
@@ -262,10 +268,14 @@ int32_t main(int argc, char *argv[]) {
 			pos -= dir;
 			return true;
 		}
-		std::vector acopy(arrP2);
+		arrP2Copy.assign(arrP2.begin(), arrP2.end());
 		if ((arrP2[pos.y][pos.x] == 'O' || arrP2[pos.y][pos.x] == '[' || arrP2[pos.y][pos.x] == ']') && !moveP2(arrP2, dir, pos)) {
 			pos -= dir;
-			arrP2 = acopy;
+			for (size_t y = 0; y < arrP2Copy.size(); ++y) {
+				for (size_t x = 0; x < arrP2Copy[y].size(); ++x) {
+					if (arrP2Copy[y][x] != arrP2[y][x]) updateGrid(arrP2, x, y, arrP2Copy[y][x]);
+				}
+			}
 		} else {
 			updateGrid(arrP2, (pos.x), (pos.y), chr);
 			updateGrid(arrP2, (pos.x - dir.x), (pos.y - dir.y), '.');
@@ -298,7 +308,7 @@ int32_t main(int argc, char *argv[]) {
 	};
 	// clang-format on
 
-	auto setText = [&arrP2, &chars](std::string str, std::string style = "") -> void {
+	auto setText = [&arrP2, &chars](std::string str, std::string style = "", int x = -1, int y = -1) -> void {
 		std::ostringstream oss;
 		const int fs = 8;
 		const int yPos = (arrP2.size() / 2) - (fs / 2);
@@ -309,51 +319,48 @@ int32_t main(int argc, char *argv[]) {
 				auto p = chars[chr][i];
 				int x_ = fs * j + xPos + p.first + 0;
 				int y_ = yPos + p.second;
-				oss << "\x1B[" << y_ << ";" << x_ << "H";
+				oss << "\x1b[999999;1H";
+				oss << "\x1b[" << (arrP2.size() - (y_ + 0)) << "A";
+				oss << "\x1B[" << x_ << "C"; 
 				oss << style;
-				oss << arrP2[y_ - 1][x_ - 1] << "\x1b[0m";
+				if (style == "" && x_ < x) {
+					if (arrP2[y_ - 1][x_] == '[' || arrP2[y_ - 1][x_] == ']') oss << "\x1b[38;2;255;165;0m";
+					else if (arrP2[y_ - 1][x_] == '.') oss << COLOREMPTY;
+				}
+				oss << arrP2[y_ - 1][x_]; 
+				oss << "\x1b[0m";
 			}
 		}
-		std::cout << oss.str() << std::endl;
+		std::cout << oss.str() << "\x1b[0m" << std::flush;
 	};
 
 	std::string prevStr = "";
-	for (size_t y = 0; y < arrP2.size(); ++y) {
-		for (size_t x = 0; x < arrP2[y].size(); ++x) {
+	for (size_t x = 0; x < arrP2[0].size(); ++x) {
+		for (size_t y = 0; y < arrP2.size(); ++y) {
 			if (arrP2[y][x] == '[') {
 				part2 += 100 * y + x;
 				if (PRINTIT) {
 					std::string str = std::to_string(part2);
-					setText(prevStr, "");
+					setText(prevStr, "", x, y);
 					setText(str, "\x1b[7m");
+					std::ostringstream oss;
+					oss << "\x1b[999999;1H";
+					oss << "\x1b[" << (arrP2.size() - (y + 1)) << "A";
+					oss << "\x1B[" << (x + 0) << "C";
+					oss << "\x1b[38;2;255;165;0m";
+					oss << "[]";
+					std::cout << oss.str() << "\x1b[0m" << std::flush;
 					prevStr = str;
 					std::this_thread::sleep_for(std::chrono::microseconds(DELAYTEXT));
 				}
 			}
 		}
 	}
-	if (PRINTIT) std::cout << "\x1B[" << arrP2.size() << "H" << std::endl; /// move cursor to the bottom
+	if (PRINTIT) std::cout << "\x1B[999999;0H\x1b[?25h" << std::endl; /// move cursor to the bottom and restore cursor visibility
 
 	std::cout << DEBUG_INFO_S << duration_str(t0) << "  part1=\x1b[1m\x1b[38;2;155;255;15m" << part1 << "\x1b[0m part2=\x1b[1m\x1b[38;2;155;255;15m" << part2 << "\x1b[0m" << std::endl;
 	return 0;
 }
-
-#ifdef _WIN32
-#include <windows.h>
-int getMaxVisibleRows() {
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) { return csbi.srWindow.Bottom - csbi.srWindow.Top + 1; }
-	return -1; 
-}
-#else
-#include <sys/ioctl.h>
-#include <unistd.h>
-int getMaxVisibleRows() {
-	struct winsize w;
-	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) != -1) { return w.ws_row; }
-	return -1; 
-}
-#endif
 
 #ifdef _WIN32
 #include <windows.h>
