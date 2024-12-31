@@ -8,14 +8,29 @@
 #include <unistd.h>
 #include <cmath>
 #include <vector>
-#include <map>
 #include <set>
 #include <thread>
+#include <csignal>
 
 #define 🍕 true
-#define GRID_COLUMN_WIDTH 2
+bool PRINTMANYIT = false;
+bool PRINTIT = false;
 #define DELAY 0
-int getMaxVisibleRows();
+#define GRID_COLUMN_WIDTH 2
+#define COLOREXPLORED "\x1b[48;2;85;85;0m"
+#define COLORPATH "\x1b[48;2;0;255;0m"
+#define COLORWALL ""
+#define COLOREMPTY "\x1b[8m"
+#define COLORSTART "\x1b[38;2;0;128;128m\x1b[48;2;0;128;128m"
+#define COLOREND "\x1b[38;2;255;0;0m\x1b[48;2;255;0;0m"
+void exitHandler() {
+	if (PRINTMANYIT) std::cout << "\x1b[?25h" << std::flush; /// show cursor
+	if (PRINTMANYIT) std::cout << "\x1b[?7h" << std::flush; /// enable wrapping
+	if (PRINTMANYIT) std::cout << "\x1b[9999999;1H" << std::flush; /// move cursor to end
+}
+void signalHandler(int signum) {
+	std::exit(signum);
+}
 
 struct sCoord {
 	int x, y;
@@ -76,15 +91,19 @@ void printGrid(const std::vector<std::string> &grid, const std::set<sCoord> hls 
 	for (size_t y = 0; y < grid.size(); ++y) {
 		for (size_t x = 0; x < grid[y].size(); ++x) {
 			char chr = grid[y][x];
+			if (chr == '.') oss << COLOREMPTY;
+			else if (chr == '#') oss << COLORWALL;
+			else if (chr == 'S') oss << COLORSTART;
+			else if (chr == 'E') oss << COLOREND;
 			for (const sCoord &p : hls) {
-				if (p.x == x && p.y == y) oss << "\x1b[48;2;0;255;0m";
+				if (p.x == x && p.y == y) oss << COLORPATH;
 			}
 			for (size_t i = 0; i < cellWidth; ++i) { oss << "" << grid[y][x] << ""; }
 			oss << "\x1b[0m";
 		}
-		oss << std::endl;
+		if (y != grid.size() - 1) oss << std::endl;
 	}
-	std::cout << oss.str();
+	std::cout << oss.str() << std::flush;
 }
 
 std::vector<sCoord> getShortestPath(std::vector<std::vector<sCoord>> &grid, const sCoord &startPos, const sCoord &endPos, bool rec = true) {
@@ -101,9 +120,13 @@ std::vector<sCoord> getShortestPath(std::vector<std::vector<sCoord>> &grid, cons
 }
 
 int32_t main(int argc, char *argv[]) {
+	if (argc > 1) PRINTIT = true;
+	if ((argc > 1 && argv[1][0] == 'a') || (argc > 1 && strlen(argv[1]) > 1)) PRINTMANYIT = true;
+	std::atexit(exitHandler);
+	std::signal(SIGINT, signalHandler);
+	std::signal(SIGTERM, signalHandler);
+	std::signal(SIGABRT, signalHandler);
 	auto t0 = std::chrono::high_resolution_clock::now();
-	bool printmanystuff = (argc > 1 && argv[1][0] == 'a') ? true : false;
-	bool printstuff = (argc > 1) ? true : false;
 	int part1 = 0;
 	int part2 = 0;
 	std::vector<std::string> arr;
@@ -115,7 +138,6 @@ int32_t main(int argc, char *argv[]) {
 	sCoord endPos;
 	for (size_t y = 0; y < arr.size(); ++y) {
 		for (size_t x = 0; x < arr[y].size(); ++x) {
-			if (arr[y][x] == '.') arr[y][x] = ' ';
 			grid[y][x].chr = arr[y][x];
 			grid[y][x].y = y;
 			grid[y][x].x = x;
@@ -128,28 +150,27 @@ int32_t main(int argc, char *argv[]) {
 		}
 	}
 
-	int visibleRows;
-	if (printmanystuff) {
-		visibleRows = getMaxVisibleRows();
-		if (visibleRows < arr.size()) {
-			std::cout << "Requires \x1b[7m" << arr.size() << "\x1b[0m rows to print. Currently theres only \x1b[7m" << visibleRows << "\x1b[0m visible rows. Make the terminal bigger or zoom out." << std::endl;
-			printmanystuff = false;
-		}
-	}
-	if (printmanystuff) {
+	if (PRINTMANYIT) {
 		std::ios_base::sync_with_stdio(false);
 		std::cin.tie(NULL);
+		std::cout << "\x1b[?25l" << std::flush; /// hide cursor
+		std::cout << "\x1b[?7l" << std::flush; /// disable wrapping
 		printGrid(arr);
 	}
-	auto setCells = [&arr, &visibleRows](const std::vector<sCoord> &path, std::string style = "") -> void {
+	auto setCells = [&arr](const std::vector<sCoord> &path, std::string style = "") -> void {
 		std::ostringstream oss;
 		for (size_t i = 0; i < path.size(); ++i) {
-			oss << "\x1B[" << (visibleRows - arr.size() - 1) + (path[i].y + 1) << ";" << (path[i].x) * GRID_COLUMN_WIDTH + 1 << "H";
+			oss << "\x1b[999999;1H";
+			oss << "\x1b[" << (arr.size() - (path[i].y + 1)) << "A";
+			oss << "\x1B[" << path[i].x * GRID_COLUMN_WIDTH << "C";
+			if (arr[path[i].y][path[i].x] == '.') oss << COLOREMPTY;
+			else if (arr[path[i].y][path[i].x] == 'S') oss << COLORSTART;
+			else if (arr[path[i].y][path[i].x] == 'E') oss << COLOREND;
 			oss << style;
 			for (size_t i = 0; i < GRID_COLUMN_WIDTH; ++i) oss << arr[path[i].y][path[i].x];
 			oss << "\x1b[0m";
 		}
-		std::cout << oss.str() << std::endl;
+		std::cout << oss.str() << std::flush;
 	};
 
 	std::vector<sCoord> shortestPath0;
@@ -189,15 +210,15 @@ int32_t main(int argc, char *argv[]) {
 				queue.back().turns += 1;
 			}
 		}
-		if (printmanystuff) {
+		if (PRINTMANYIT) {
 			shortestPath = getShortestPath(grid, startPos, curr, false);
-			if (shortestPath0.size() > 0) setCells(shortestPath0, "\x1b[48;2;85;85;0m"); /// clear green
-			setCells(shortestPath, "\x1b[48;2;0;255;0m"); /// make green
+			if (shortestPath0.size() > 0) setCells(shortestPath0, COLOREXPLORED);
+			setCells(shortestPath, COLORPATH);
 			shortestPath0 = shortestPath;
 			std::this_thread::sleep_for(std::chrono::microseconds(DELAY));
 		}
 	}
-	if (printmanystuff) setCells(shortestPath, "\x1b[48;2;85;85;0m"); /// clear green
+	if (PRINTMANYIT) setCells(shortestPath, COLOREXPLORED);
 	std::vector<sCoord> projectedPath = getShortestPath(grid, startPos, endPos);
 	part1 = grid[endPos.y][endPos.x].cost;
 
@@ -255,30 +276,14 @@ int32_t main(int argc, char *argv[]) {
 	}
 	if (🍕== true) part2 = bestSpots.size();
 
-	if (printmanystuff) {
-		setCells(std::vector<sCoord>(bestSpots.begin(), bestSpots.end()), "\x1b[48;2;150;255;255m");
-		std::cout << "\033[" << arr.size() + 99999 << "H" << std::endl;
-	} else if (printstuff) {
+	if (PRINTMANYIT) {
+		setCells(std::vector<sCoord>(bestSpots.begin(), bestSpots.end()), COLORPATH);
+		std::cout << "\033[9999999;1H" << std::endl; /// move cursor to end
+	} else if (PRINTIT) {
 		printGrid(arr, bestSpots, 1);
+		std::cout << std::endl;
 	}
 
 	std::cout << DEBUG_INFO_S << duration_str(t0) << "  part1=\x1b[1m\x1b[38;2;155;255;15m" << part1 << "\x1b[0m part2=\x1b[1m\x1b[38;2;155;255;15m" << part2 << "\x1b[0m" << std::endl;
 	return 0;
 }
-
-#ifdef _WIN32
-#include <windows.h>
-int getMaxVisibleRows() {
-	CONSOLE_SCREEN_BUFFER_INFO csbi;
-	if (GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi)) { return csbi.srWindow.Bottom - csbi.srWindow.Top + 1; }
-	return -1; 
-}
-#else
-#include <sys/ioctl.h>
-#include <unistd.h>
-int getMaxVisibleRows() {
-	struct winsize w;
-	if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &w) != -1) { return w.ws_row; }
-	return -1; 
-}
-#endif
