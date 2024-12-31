@@ -402,6 +402,22 @@ char getDir() {
 		y = getch();
 		z = getch();
 	}
+	if (z == 32 && y == 32) {
+		switch (x) {
+		case 'w':
+		case 'k':
+			return '^';
+		case 's':
+		case 'j':
+			return 'v';
+		case 'd':
+		case 'l':
+			return '>';
+		case 'a':
+		case 'h':
+			return '<';
+		}
+	}
 	if (x == 27 && y == 91) {
 		switch (z) {
 		case 65:
