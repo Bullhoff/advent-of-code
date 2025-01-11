@@ -31,8 +31,8 @@ class Part1n2 {
 		this.signalSum = this.calcSignalSum();
 		currentRow = this.addCRTRow(currentRow);
 
-		utils.writeFile({ col: this.col, signalSum: this.signalSum }, 'day10.1');
-		utils.writeFile(this.CRTString, 'day10.2');
+		//utils.writeFile({ col: this.col, signalSum: this.signalSum }, 'day10.1');
+		//utils.writeFile(this.CRTString, 'day10.2');
 
 		//console.table(this.col)
 		//console.table(this.CRT)

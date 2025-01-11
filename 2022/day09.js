@@ -325,4 +325,4 @@ let body = `
     </div>`;
 
 let fullhtml = utils.html({ body: body, bodyTag: 'onload="makeGrid(404, 250)"', style: style, styleExternal: '', scriptExternal: '', script: script });
-utils.writeFile(fullhtml, day + '_part2', '.html');
+//utils.writeFile(fullhtml, day + '_part2', '.html');
