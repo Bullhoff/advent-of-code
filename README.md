@@ -1,5 +1,17 @@
 # Advent of Code
 
+<details><summary><a href="2020">2020</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs </summary>
+<ul>
+<li > <a href="2020/day01.cs">day01.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
+<li > <a href="2020/day02.cs">day02.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
+<li > <a href="2020/day03.cs">day03.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
+<li > <a href="2020/day04.cs">day04.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
+<li > <a href="2020/day05.cs">day05.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
+<li > <a href="2020/day06.cs">day06.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
+<li > <a href="2020/day07.cs">day07.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
+<li > <a href="2020/day08.cs">day08.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
+</ul>
+</details>
 <details><summary><a href="2021">2021</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=py" alt="py" /></picture> Python   <picture><img height="16" src="https://skillicons.dev/icons?i=js" alt="js" /></picture> Javascript </summary>
 <ul>
 <li > <a href="2021/day1.1.py">day1.1.py</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=py" alt="py" /></picture> Python  </li>
@@ -48,7 +60,6 @@
 <li > <a href="2023/day14.sh">day14.sh</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=bash" alt="bash" /></picture> Bash  </li>
 <li > <a href="2023/day15.sh">day15.sh</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=bash" alt="bash" /></picture> Bash  </li>
 <li > <a href="2023/day16.sh">day16.sh</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=bash" alt="bash" /></picture> Bash  </li>
-<li > <a href="2023/day17.sh">day17.sh</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=bash" alt="bash" /></picture> Bash  </li>
 </ul>
 </details>
 <details><summary><a href="2024">2024</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cpp" alt="cpp" /></picture> C++ </summary>
