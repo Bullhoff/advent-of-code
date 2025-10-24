@@ -11,6 +11,7 @@
 <li > <a href="2020/day07.cs">day07.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
 <li > <a href="2020/day08.cs">day08.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
 <li > <a href="2020/day09.cs">day09.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
+<li > <a href="2020/day10.cs">day10.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
 </ul>
 </details>
 <details><summary><a href="2021">2021</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=py" alt="py" /></picture> Python   <picture><img height="16" src="https://skillicons.dev/icons?i=js" alt="js" /></picture> Javascript </summary>
