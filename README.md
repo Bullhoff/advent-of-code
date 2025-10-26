@@ -1,17 +1,18 @@
 # Advent of Code
 
-<details><summary><a href="2020">2020</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs </summary>
+<details><summary><a href="2020">2020</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C# </summary>
 <ul>
-<li > <a href="2020/day01.cs">day01.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
-<li > <a href="2020/day02.cs">day02.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
-<li > <a href="2020/day03.cs">day03.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
-<li > <a href="2020/day04.cs">day04.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
-<li > <a href="2020/day05.cs">day05.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
-<li > <a href="2020/day06.cs">day06.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
-<li > <a href="2020/day07.cs">day07.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
-<li > <a href="2020/day08.cs">day08.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
-<li > <a href="2020/day09.cs">day09.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
-<li > <a href="2020/day10.cs">day10.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> cs  </li>
+<li > <a href="2020/day01.cs">day01.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
+<li > <a href="2020/day02.cs">day02.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
+<li > <a href="2020/day03.cs">day03.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
+<li > <a href="2020/day04.cs">day04.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
+<li > <a href="2020/day05.cs">day05.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
+<li > <a href="2020/day06.cs">day06.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
+<li > <a href="2020/day07.cs">day07.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
+<li > <a href="2020/day08.cs">day08.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
+<li > <a href="2020/day09.cs">day09.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
+<li > <a href="2020/day10.cs">day10.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
+<li > <a href="2020/day11.cs">day11.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
 </ul>
 </details>
 <details><summary><a href="2021">2021</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=py" alt="py" /></picture> Python   <picture><img height="16" src="https://skillicons.dev/icons?i=js" alt="js" /></picture> Javascript </summary>
