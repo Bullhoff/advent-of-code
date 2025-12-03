@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net10.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<NoWarn>MSB3270;MSD3246;CS0164;CS0219;CS8321;CS0246;CS0168;CS1024;CS8981</NoWarn>
+	</PropertyGroup>
+	<ItemGroup>
+		<Compile Remove="_*" />
+		<Compile Remove="*/_*" />
+	</ItemGroup>
+</Project>
