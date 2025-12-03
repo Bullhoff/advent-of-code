@@ -4,11 +4,8 @@
 #:property TargetFramework=net10.0
 #nullable enable
 
-using System.Text.RegularExpressions;
-using System.Collections;
-using System.Reflection;
-
 public class Program {
+	
 	static void Main() {
 		Program inst = new Program();
 		System.Diagnostics.Stopwatch sw = new System.Diagnostics.Stopwatch();
