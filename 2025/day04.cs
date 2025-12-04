@@ -20,30 +20,15 @@ public class Program{
 	
 	void Solve(){
 		grid = File.ReadAllLines("data/day04.txt").Where(line => !string.IsNullOrWhiteSpace(line)).Select(line => line.TrimEnd('\r')).Select(line => line.ToCharArray()).ToArray();
-		for(int y=0; y<grid.Length; y++){
-			for(int x=0; x<grid[y].Length; x++){
-				char chr = grid[y][x];
-				if(chr != '@') continue;
-				int count = 0;
-				if(GetCellChar(x,y-1) == '@') count++;
-				if(GetCellChar(x,y+1) == '@') count++;
-				if(GetCellChar(x-1,y) == '@') count++;
-				if(GetCellChar(x+1,y) == '@') count++;
-				if(GetCellChar(x-1,y-1) == '@') count++;
-				if(GetCellChar(x+1,y+1) == '@') count++;
-				if(GetCellChar(x+1,y-1) == '@') count++;
-				if(GetCellChar(x-1,y+1) == '@') count++;
-				if(count < 4) part1++;
-			}
-		}
+		DoStuff((int x, int y)=> part1++ );
 		while(true){
-			int rollsRemoved = RemoveRolls();
+			int rollsRemoved = DoStuff((int x, int y)=> grid[y][x] = ' ' );
 			part2 += rollsRemoved;
 			if(rollsRemoved == 0) break;
 		}
 	}
 
-	int RemoveRolls(){
+	int DoStuff(Action<int,int> func){
 		int removed = 0;
 		if(grid == null) return removed;
 		for(int y=0; y<grid.Length; y++){
@@ -60,8 +45,8 @@ public class Program{
 				if(GetCellChar(x+1,y-1) == '@') count++;
 				if(GetCellChar(x-1,y+1) == '@') count++;
 				if(count < 4){
+					func(x,y);
 					removed++;
-					grid[y][x] = ' ';
 				}
 			}
 		}
