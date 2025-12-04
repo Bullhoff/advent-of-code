@@ -100,5 +100,6 @@
 <ul>
 <li > <a href="2025/day01.cs">day01.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
 <li > <a href="2025/day02.cs">day02.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
+<li > <a href="2025/day03.cs">day03.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
 </ul>
 </details>
