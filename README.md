@@ -96,12 +96,13 @@
 <li > <a href="2024/day25.cpp">day25.cpp</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cpp" alt="cpp" /></picture> C++  </li>
 </ul>
 </details>
-<details><summary><a href="2025">2025</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C# </summary>
+<details><summary><a href="2025">2025</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#   <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C# </summary>
 <ul>
 <li > <a href="2025/day01.cs">day01.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
 <li > <a href="2025/day02.cs">day02.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
 <li > <a href="2025/day03.cs">day03.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
 <li > <a href="2025/day04.cs">day04.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
 <li > <a href="2025/day05.cs">day05.cs</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
+<li > <a href="2025/day06.csx">day06.csx</a>    <picture><img height="16" src="https://skillicons.dev/icons?i=cs" alt="cs" /></picture> C#  </li>
 </ul>
 </details>
